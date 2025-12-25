@@ -1,0 +1,10 @@
+.read sql/00_pragmas.sql
+.read sql/10_tracks.sql
+.read sql/20_artists.sql
+.read sql/21_track_artists.sql
+.read sql/30_collections.sql
+.read sql/31_collection_items.sql
+.read sql/40_platform_tracks.sql
+.read sql/41_platform_artists.sql
+.read sql/42_platform_collections.sql
+.read sql/90_indexes.sql
