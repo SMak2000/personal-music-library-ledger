@@ -54,9 +54,6 @@ def upsert_track(
     *,
     track_uid: Optional[str] = None,
 ) -> str:
-    if not track.title or not track.title.strip():
-        raise ValueError("Track title is required")
-
     existing_uid: Optional[str] = None
     if track.isrc:
         row = get_track_by_isrc(conn, track.isrc)

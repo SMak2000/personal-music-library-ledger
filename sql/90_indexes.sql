@@ -2,9 +2,7 @@
 CREATE INDEX IF NOT EXISTS idx_tracks_isrc ON tracks(isrc);
 CREATE INDEX IF NOT EXISTS idx_tracks_title ON tracks(title);
 CREATE INDEX IF NOT EXISTS idx_tracks_media_type ON tracks(media_type);
-CREATE UNIQUE INDEX uq_tracks_isrc
-ON tracks(isrc)
-WHERE isrc IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_tracks_isrc ON tracks(isrc) WHERE isrc IS NOT NULL;
 
 -- artists
 CREATE INDEX IF NOT EXISTS idx_artists_name ON artists(name);

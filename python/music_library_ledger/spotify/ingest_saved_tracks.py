@@ -4,7 +4,7 @@ import sqlite3
 from typing import Optional
 
 from music_library_ledger.db.tracks import TrackInput, upsert_track
-from music_library_ledger.db.artists import ArtistInput, get_or_create_artist, attach_artist_to_track
+from music_library_ledger.db.artists import ArtistInput, clear_artists_for_track, get_or_create_artist, attach_artist_to_track
 from music_library_ledger.db.collections import CollectionInput, get_or_create_collection, add_track_to_collection
 from music_library_ledger.db.platform import upsert_platform_track, upsert_platform_artist, upsert_platform_collection
 from music_library_ledger.spotify.client import get_spotify_client
@@ -32,16 +32,15 @@ def ingest_saved_tracks(conn: sqlite3.Connection) -> None:
         platform="spotify",
         platform_collection_id="me:tracks",
         collection_uid=liked_uid,
-        url=None,
+        playlist_url=None,
+        raw_json={"kind": "saved_tracks"},
     )
 
     limit = 30
     offset = 0
     position = 0  # stable ordering in our DB
 
-    test_limit = 150
-    counter = 0
-    while counter < test_limit:
+    while True:
         page = sp.current_user_saved_tracks(limit=limit, offset=offset)
         items = page.get("items", [])
         if not items:
@@ -62,7 +61,7 @@ def ingest_saved_tracks(conn: sqlite3.Connection) -> None:
                 track_uid = upsert_track(
                     conn,
                     TrackInput(
-                        title=t.get("name") or "",
+                        title=t.get("name") or "UMKNOWN TITLE",
                         album=(t.get("album") or {}).get("name"),
                         duration_ms=t.get("duration_ms"),
                         isrc=((t.get("external_ids") or {}).get("isrc")),
@@ -78,11 +77,16 @@ def ingest_saved_tracks(conn: sqlite3.Connection) -> None:
                     platform="spotify",
                     platform_track_id=spotify_track_id,
                     track_uid=track_uid,
-                    url=_spotify_url(t),
+                    song_url=_spotify_url(t),
+                    raw_json=t,
+                    match_confidence=1.0,
+                    match_method="spotify_id",
                 )
 
                 # Artists (ordered)
                 artists = t.get("artists") or []
+                clear_artists_for_track(conn, track_uid)
+
                 for idx, a in enumerate(artists):
                     artist_uid = get_or_create_artist(conn, ArtistInput(name=a.get("name") or ""))
                     attach_artist_to_track(
@@ -98,7 +102,7 @@ def ingest_saved_tracks(conn: sqlite3.Connection) -> None:
                             platform="spotify",
                             platform_artist_id=a["id"],
                             artist_uid=artist_uid,
-                            url=_spotify_url(a),
+                            raw_json=a,
                         )
 
                 # Add to "Liked Songs"
@@ -112,7 +116,6 @@ def ingest_saved_tracks(conn: sqlite3.Connection) -> None:
                 position += 1
 
         offset += limit
-        counter += len(items)
 
 
 def main() -> None:
