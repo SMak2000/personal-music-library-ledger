@@ -7,7 +7,7 @@ from typing import Optional, Sequence
 @dataclass(frozen=True)
 class CollectionInput:
     name: str
-    collection_type: str = "playlist"  # maps to SQL column: collections.type
+    collection_type: str = "playlist"  # maps to SQL column: collections.collection_type
     description: Optional[str] = None
 
 
@@ -34,7 +34,7 @@ def get_collection_by_name_and_type(
         """
         SELECT *
         FROM collections
-        WHERE name = ? AND type = ?;
+        WHERE name = ? AND collection_type = ?;
         """,
         (name.strip(), collection_type.strip()),
     ).fetchone()
@@ -75,7 +75,7 @@ def get_or_create_collection(
         INSERT INTO collections (
             collection_uid,
             name,
-            type,
+            collection_type,
             description,
             created_at,
             updated_at
@@ -120,18 +120,33 @@ def add_track_to_collection(
         )
         return
 
-    conn.execute(
-        """
-        INSERT INTO collection_items (
-            collection_uid,
-            track_uid,
-            position,
-            added_at
+    if added_at is None:
+        conn.execute(
+            """
+            INSERT INTO collection_items (
+                collection_uid,
+                track_uid,
+                position,
+                added_at
+            )
+            VALUES (?, ?, ?, datetime('now'));
+            """,
+            (collection_uid, track_uid, position),
         )
-        VALUES (?, ?, ?, ?);
-        """,
-        (collection_uid, track_uid, position, added_at),
-    )
+    else:
+        conn.execute(
+            """
+            INSERT INTO collection_items (
+                collection_uid,
+                track_uid,
+                position,
+                added_at
+            )
+            VALUES (?, ?, ?, ?);
+            """,
+            (collection_uid, track_uid, position, added_at),
+        )
+
 
 
 def remove_track_from_collection(
@@ -177,7 +192,7 @@ def list_collections(
     params = []
     where_sql = ""
     if collection_type is not None:
-        where_sql = "WHERE type = ?"
+        where_sql = "WHERE collection_type = ?"
         params.append(collection_type.strip())
 
     params.append(limit)

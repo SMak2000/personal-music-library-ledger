@@ -16,7 +16,7 @@ CREATE INDEX IF NOT EXISTS idx_track_artists_artist
   ON track_artists(artist_uid);
 
 -- collections
-CREATE INDEX IF NOT EXISTS idx_collections_type ON collections(type);
+CREATE INDEX IF NOT EXISTS idx_collections_type ON collections(collection_type);
 
 -- collection_items
 CREATE INDEX IF NOT EXISTS idx_collection_items_collection_pos

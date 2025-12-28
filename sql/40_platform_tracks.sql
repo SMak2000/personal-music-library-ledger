@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS platform_tracks (
   raw_json           TEXT,
   created_at         TEXT NOT NULL DEFAULT (datetime('now')),
   last_verified_at   TEXT,
+  song_url           TEXT,
+  updated_at         TEXT NOT NULL DEFAULT (datetime('now')),
 
   PRIMARY KEY (platform, platform_track_id),
   FOREIGN KEY (track_uid) REFERENCES tracks(track_uid) ON DELETE CASCADE
