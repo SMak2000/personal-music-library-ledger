@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 *.egg-info/
 .spotify_token_cache
+browser.json
